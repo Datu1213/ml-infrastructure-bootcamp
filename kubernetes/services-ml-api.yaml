@@ -1,0 +1,16 @@
+apiVersion: api/v1
+kind: Service
+metadata:
+  name: ml-api-service
+  namespace: ml-production
+  labels:
+    app: ml-api
+spec:
+  type: LoadBalancer
+  selector:
+    labels:
+      app: ml-api
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8000

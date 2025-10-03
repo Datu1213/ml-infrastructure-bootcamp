@@ -1,5 +1,20 @@
 version: '3.8'
 services:
+  # A typical service structure:
+  # build/image
+  # ports
+  # environment
+  # depends_on:
+  #   - service_name
+  #   condition: [service_healthy, service_started, service_completed_successfully]
+  # volumes
+  # networks
+  # restart: [no, always, on-failure, unless-stopped]
+  # healthcheck:
+  #   test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+  #   interval: 30s
+  #   timeout: 10s
+  #   retries: 3
   ml-api:
     build:
       context: .

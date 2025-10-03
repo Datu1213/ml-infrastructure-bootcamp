@@ -16,8 +16,7 @@ spec:
   # Briged between selector and template labels
   selector:
     matchLabels:
-      app: ml-api # Mathches Pods with label "app: ml-api"
-
+      app: ml-api # Mathches Pods with label "app: ml-api"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      
   template:
     metadata:
       labels:
@@ -30,7 +29,7 @@ spec:
       containers:
         - name: ml-api
           image: ml-api:v1.0.0
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8000
               name: http
