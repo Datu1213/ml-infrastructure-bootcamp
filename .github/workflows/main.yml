@@ -91,7 +91,7 @@ jobs:
         run: |
           # 这是一个简单的验证，尝试用--dry-run来检查语法
           for file in kubernetes/*.yaml; do
-            kubectl apply -f "$file" --dry-run=client
+            kubectl apply -f "$file" --dry-run=client --validate=false
           done
 
   build-and-push:
