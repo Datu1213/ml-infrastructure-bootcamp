@@ -1,0 +1,41 @@
+```yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: ml-api-hpa
+  namespace: ml-production
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: ml-api
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+  # Scale up when "ANY" of the following metrics exceed the target
+  # Scale down when "ALL" of the following metrics are below the target
+    # 1. CPU Utilization Metric
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70   # Target CPU usage 70%
+
+    # 2. Memory Utilization Metric
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 75   # Target Memory usage 75%
+
+    # 3. Custom Metric (e.g., QPS from Prometheus)
+    # - type: Pods
+    #   pods:
+    #     metric:
+    #       name: requests_per_second   # 例如 QPS
+    #     target:
+    #       type: AverageValue
+    #       averageValue: "100"
+```

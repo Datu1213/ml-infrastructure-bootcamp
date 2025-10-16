@@ -1,0 +1,52 @@
+# .github/workflows/main.yml
+
+name: ML Infrastructure CI/CD Pipeline
+
+# 定义触发条件
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+env:
+  PYTHON_VERSION: '3.9'
+
+jobs:
+  # 第一个任务：代码质量分析
+  code-quality:
+    name: Code Quality Analysis
+    runs-on: ubuntu-latest
+    steps:
+      # 步骤1：检出代码，让工作流可以访问你的仓库代码
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # 步骤2：设置指定版本的Python环境
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      # 步骤3：安装项目依赖
+      - name: Install Dependencies
+        run: |
+          pip install -r requirements.txt
+          # 为了运行flake8等工具，我们可能需要开发依赖
+          # 暂时先安装与主依赖相同的文件
+          pip install flake8 black bandit
+
+      # 步骤4：检查代码格式
+      - name: Code Formatting
+        run: |
+          black --check --diff src/
+          
+      # 步骤5：代码风格检查 (Linter)
+      - name: Linting
+        run: |
+          flake8 src/ --max-line-length=88
+
+      # 步骤6：安全扫描
+      - name: Security Scanning
+        run: |
+          bandit -r src/
