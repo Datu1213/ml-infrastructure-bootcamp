@@ -70,4 +70,4 @@ jobs:
           # 安装测试所需要的库
           pip install pytest httpx
       - name: Run Unit & Integration Tests
-        run: pytest
+        run: pytest -v tests/
