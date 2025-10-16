@@ -87,12 +87,19 @@ jobs:
       - uses: hashicorp/setup-terraform@v2
       - name: Terraform Format Check
         run: terraform fmt -check -recursive infrastructure/terraform/
-      - name: Kubernetes Manifest Validation
+      
+      # 新增的步骤：安装并使用 kubeval
+      - name: Install kubeval
         run: |
-          # 这是一个简单的验证，尝试用--dry-run来检查语法
-          for file in kubernetes/*.yaml; do
-            kubectl apply -f "$file" --dry-run=client --validate=false
-          done
+          # 下载 kubeval 二进制文件
+          wget https://github.com/instrumenta/kubeval/releases/latest/download/kubeval-linux-amd64.tar.gz
+          # 解压
+          tar -xf kubeval-linux-amd64.tar.gz
+          # 移动到可执行路径
+          sudo mv kubeval /usr/local/bin
+
+      - name: Kubernetes Manifest Validation with kubeval
+        run: kubeval --ignore-missing-schemas kubernetes/*.yaml
 
   build-and-push:
     name: Build and Push Container
