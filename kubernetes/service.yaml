@@ -16,3 +16,4 @@ spec:
     - protocol: TCP
       port: 80 # Service自身的端口
       targetPort: 8000 # 容器正在监听的端口
+      

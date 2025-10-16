@@ -20,3 +20,4 @@ spec:
         imagePullPolicy: IfNotPresent # 关键！
         ports:
         - containerPort: 8000
+        

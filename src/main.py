@@ -52,3 +52,4 @@ def predict(features: IrisFeatures):
     
     # 返回预测结果
     return {"prediction": int(prediction[0])}
+    

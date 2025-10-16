@@ -1,2 +1,8 @@
 ml-infra-env/
 manifests/
+src/__pycache__/
+src/.pytest_cache/
+src/data/
+src/models/
+src/__init__.py
+src/config.py
