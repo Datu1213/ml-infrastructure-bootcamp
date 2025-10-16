@@ -50,4 +50,24 @@ jobs:
       - name: Security Scanning
         run: |
           bandit -r src/
-          
+  
+  testing:
+    name: Comprehensive Testing
+    runs-on: ubuntu-latest
+    # 表示这个任务必须等待 code-quality 成功后才能开始
+    needs: code-quality
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Install Dependencies
+        run: |
+          pip install -r requirements.txt
+          # 安装测试所需要的库
+          pip install pytest httpx
+      - name: Run Unit & Integration Tests
+        run: pytest -v --cov=src --cov-report=term-missing tests/
