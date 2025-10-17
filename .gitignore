@@ -6,3 +6,4 @@ src/data/
 src/models/
 src/__init__.py
 src/config.py
+actions-runner/
