@@ -14,7 +14,7 @@ env:
   # 定义镜像仓库地址为GitHub Container Registry
   DOCKER_REGISTRY: ghcr.io
   # 镜像名将是 ghcr.io/<你的GitHub用户名>/<你的仓库名>
-  IMAGE_NAME: ${{ toLowerCase(github.repository) }}
+  IMAGE_NAME: ${{ github.repository | toLower }}
 
 jobs:
   # 第一个任务：代码质量分析
