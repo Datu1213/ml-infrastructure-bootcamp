@@ -152,7 +152,7 @@ jobs:
 
       - name: Deploy Application
         env:
-          # 关键！强制后续所有命令都使用这个指定的kubeconfig文件
+          # 强制后续所有命令都使用这个指定的kubeconfig文件
           KUBECONFIG: ${{ steps.setup_kubeconfig.outputs.path }}
         run: |
           echo "--- Verifying kubectl connection ---"
