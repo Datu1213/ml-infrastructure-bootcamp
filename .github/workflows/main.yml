@@ -140,49 +140,15 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Configure kubectl
-        id: setup_kubeconfig
-        run: |
-          echo "--- Writing KUBE_CONFIG secret to file ---"
-          echo "${{ secrets.KUBE_CONFIG }}" > kubeconfig.yaml
-          echo "path=kubeconfig.yaml" >> $GITHUB_OUTPUT
-
-      - name: DEBUGGING STEP
-        env:
-          KUBECONFIG: ${{ steps.setup_kubeconfig.outputs.path }}
-        run: |
-          echo "--- START DEBUGGING RUNNER STATE ---"
-          echo " "
-          echo "1. Current directory contents:"
-          ls -la
-          echo " "
-          
-          echo "2. Content of our generated kubeconfig.yaml:"
-          cat kubeconfig.yaml
-          echo " "
-
-          echo "3. Checking the KUBECONFIG environment variable:"
-          echo "The KUBECONFIG variable is set to: '$KUBECONFIG'"
-          echo " "
-
-          echo "4. Checking default ~/.kube/config if it exists:"
-          if [ -f "$HOME/.kube/config" ]; then
-            echo "Default ~/.kube/config FOUND. Content is:"
-            cat $HOME/.kube/config
-          else
-            echo "Default ~/.kube/config NOT FOUND."
-          fi
-          echo " "
-
-          echo "5. Verifying kubectl connection with explicit config:"
-          kubectl --kubeconfig=kubeconfig.yaml cluster-info
-          echo " "
-          echo "--- END OF DEBUGGING ---"
-
       - name: Deploy Application
         env:
-          KUBECONFIG: ${{ steps.setup_kubeconfig.outputs.path }}
+          # The runner is installed in the user's home dir, ~
+          # So we point KUBECONFIG to the file we copied there.
+          KUBECONFIG: ${{ env.HOME }}/kubeconfig_for_runner.yaml
         run: |
+          echo "--- Verifying kubectl connection ---"
+          kubectl cluster-info
+          
           echo "--- Starting deployment ---"
           IMAGE_TAG="${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}@${{ github.sha }}"
           
@@ -190,4 +156,5 @@ jobs:
             ml-api-container=${IMAGE_TAG} \
             -n ml-production
           
-          kubectl rollout status deployment/ml-api-deployment -n ml-production
+          kubectl rollout status deployment/ml-api-deployment \
+            -n ml-production
