@@ -125,7 +125,7 @@ jobs:
           images: ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}
       - name: Build and Push
         uses: docker/build-push-action@v5
-        id: build # <-- 关键修改2：给这一步一个ID
+        id: build # 给这一步一个ID
         with:
           context: .
           push: true
