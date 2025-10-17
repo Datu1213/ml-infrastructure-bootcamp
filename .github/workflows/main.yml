@@ -144,7 +144,8 @@ jobs:
         env:
           # The runner is installed in the user's home dir, ~
           # So we point KUBECONFIG to the file we copied there.
-          KUBECONFIG: /ml-infrastructure-bootcamp/actions-runner/kubeconfig_for_runner.yaml
+          KUBECONFIG: /home/a/ml-infrastructure-bootcamp/actions-runner/kubeconfig_for_runner.yaml
+
         run: |
           echo "--- Verifying kubectl connection ---"
           kubectl cluster-info
