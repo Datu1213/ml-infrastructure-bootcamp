@@ -133,10 +133,8 @@ jobs:
 
   deploy:
     name: Deploy to Kind
-    # 这是关键的修改！
     runs-on: self-hosted
     needs: build-and-push
-    if: github.ref == 'refs/heads/main'
     
     steps:
       - name: Checkout Code
@@ -145,21 +143,47 @@ jobs:
       - name: Configure kubectl
         id: setup_kubeconfig
         run: |
-          # 将secret写入到当前工作目录下的一个文件中
+          echo "--- Writing KUBE_CONFIG secret to file ---"
           echo "${{ secrets.KUBE_CONFIG }}" > kubeconfig.yaml
-          # 将文件名作为输出，供下一步使用
           echo "path=kubeconfig.yaml" >> $GITHUB_OUTPUT
+
+      - name: DEBUGGING STEP
+        env:
+          KUBECONFIG: ${{ steps.setup_kubeconfig.outputs.path }}
+        run: |
+          echo "--- START DEBUGGING RUNNER STATE ---"
+          echo " "
+          echo "1. Current directory contents:"
+          ls -la
+          echo " "
+          
+          echo "2. Content of our generated kubeconfig.yaml:"
+          cat kubeconfig.yaml
+          echo " "
+
+          echo "3. Checking the KUBECONFIG environment variable:"
+          echo "The KUBECONFIG variable is set to: '$KUBECONFIG'"
+          echo " "
+
+          echo "4. Checking default ~/.kube/config if it exists:"
+          if [ -f "$HOME/.kube/config" ]; then
+            echo "Default ~/.kube/config FOUND. Content is:"
+            cat $HOME/.kube/config
+          else
+            echo "Default ~/.kube/config NOT FOUND."
+          fi
+          echo " "
+
+          echo "5. Verifying kubectl connection with explicit config:"
+          kubectl --kubeconfig=kubeconfig.yaml cluster-info
+          echo " "
+          echo "--- END OF DEBUGGING ---"
 
       - name: Deploy Application
         env:
-          # 强制后续所有命令都使用这个指定的kubeconfig文件
           KUBECONFIG: ${{ steps.setup_kubeconfig.outputs.path }}
         run: |
-          echo "--- Verifying kubectl connection ---"
-          kubectl cluster-info
-          
           echo "--- Starting deployment ---"
-          # 我们需要从ghcr.io拉取镜像，所以用完整的SHA标签
           IMAGE_TAG="${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}@${{ github.sha }}"
           
           kubectl set image deployment/ml-api-deployment \
