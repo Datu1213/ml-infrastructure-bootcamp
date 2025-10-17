@@ -128,3 +128,31 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
+  # .github/workflows/main.yml
+
+  deploy:
+    name: Deploy to Kind
+    # 这是关键的修改！
+    runs-on: self-hosted
+    needs: build-and-push
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Configure kubectl
+        run: |
+          mkdir -p $HOME/.kube
+          echo "${{ secrets.KUBE_CONFIG }}" > $HOME/.kube/config
+          
+      - name: Deploy Application
+        run: |
+          IMAGE_TAG="main-${{ github.sha }}"
+          
+          kubectl set image deployment/ml-api-deployment \
+            ml-api-container=${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:${IMAGE_TAG} \
+            -n ml-production
+          
+          kubectl rollout status deployment/ml-api-deployment -n ml-production
