@@ -14,7 +14,7 @@ env:
   # 定义镜像仓库地址为GitHub Container Registry
   DOCKER_REGISTRY: ghcr.io
   # 镜像名将是 ghcr.io/<你的GitHub用户名>/<你的仓库名>
-  IMAGE_NAME: ${{ github.repository | toLower }}
+  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   # 第一个任务：代码质量分析
@@ -118,11 +118,13 @@ jobs:
           registry: ${{ env.DOCKER_REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set lower case image name
+        run: echo "IMAGE_NAME_LOWER=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
       - name: Extract Metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}
+          images: ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME_LOWER }}
       - name: Build and Push
         uses: docker/build-push-action@v5
         id: build # 给这一步一个ID
@@ -143,6 +145,9 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      - name: Set lower case image name
+        run: echo "IMAGE_NAME_LOWER=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
       - name: Deploy Application
         env:
           # The runner is installed in the user's home dir, ~
@@ -155,7 +160,7 @@ jobs:
           kubectl cluster-info
           
           echo "--- Starting deployment ---"
-          IMAGE_TAG="${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}@${{ env.IMAGE_DIGEST }}"
+          IMAGE_TAG="${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME_LOWER }}@${{ env.IMAGE_DIGEST }}"
           
           kubectl set image deployment/ml-api-deployment \
             ml-api-container=${IMAGE_TAG} \
