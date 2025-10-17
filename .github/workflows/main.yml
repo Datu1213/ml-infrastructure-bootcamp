@@ -108,6 +108,8 @@ jobs:
     needs: [testing, infrastructure-validation]
     # 只在主分支上运行
     if: github.ref == 'refs/heads/main'
+    outputs: # <-- 关键修改1：定义输出
+      digest: ${{ steps.build.outputs.digest }}
     steps:
       - uses: actions/checkout@v4
       - name: Login to GitHub Container Registry
@@ -123,6 +125,7 @@ jobs:
           images: ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}
       - name: Build and Push
         uses: docker/build-push-action@v5
+        id: build # <-- 关键修改2：给这一步一个ID
         with:
           context: .
           push: true
@@ -145,13 +148,14 @@ jobs:
           # The runner is installed in the user's home dir, ~
           # So we point KUBECONFIG to the file we copied there.
           KUBECONFIG: /home/a/ml-infrastructure-bootcamp/actions-runner/kubeconfig_for_runner.yaml
-
+          # 从上一个任务获取镜像摘要
+          IMAGE_DIGEST: ${{ needs.build-and-push.outputs.digest }}
         run: |
           echo "--- Verifying kubectl connection ---"
           kubectl cluster-info
           
           echo "--- Starting deployment ---"
-          IMAGE_TAG="${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}@${{ github.sha }}"
+          IMAGE_TAG="${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}@${{ env.IMAGE_DIGEST }}"
           
           kubectl set image deployment/ml-api-deployment \
             ml-api-container=${IMAGE_TAG} \
