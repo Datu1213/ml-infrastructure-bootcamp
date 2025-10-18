@@ -69,6 +69,12 @@ module "eks" {
       desired_size   = 3
     }
   }
+
+  aws_auth_roles = [{
+    rolearn  = aws_iam_role.github_actions_deployer.arn
+    username = "github-actions-deployer"
+    groups   = ["system:masters"] # 授予完整的集群管理员权限
+  }]
 }
 
 
