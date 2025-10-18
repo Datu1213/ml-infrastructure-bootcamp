@@ -109,7 +109,12 @@ resource "aws_iam_role" "github_actions_deployer" {
   })
 }
 
-resource "aws_iam_role_policy_attachment" "github_actions_deployer_policy_attach" {
+resource "aws_iam_role_policy_attachment" "github_actions_deployer_eks_attach" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
+  role       = aws_iam_role.github_actions_deployer.name
+}
+
+resource "aws_iam_role_policy_attachment" "github_actions_deployer_eks_worker_attach" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
   role       = aws_iam_role.github_actions_deployer.name
 }
