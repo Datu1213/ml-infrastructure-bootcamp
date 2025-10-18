@@ -174,7 +174,7 @@ jobs:
           echo "--- Verifying kubectl connection ---"
           kubectl cluster-info
           
-          kubectl creteate namespace ml-production || echo "Namespace ml-production already exists"
+          kubectl create namespace ml-production || echo "Namespace ml-production already exists"
 
           kubectl apply -f kubernetes/
 
