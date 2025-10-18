@@ -7,3 +7,6 @@ src/models/
 src/__init__.py
 src/config.py
 actions-runner/
+infrastructure/terraform/.terraform/
+infrastructure/terraform/tfplan
+kubernetes/ml-api*

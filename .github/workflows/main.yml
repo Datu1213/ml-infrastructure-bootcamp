@@ -137,10 +137,15 @@ jobs:
   # .github/workflows/main.yml
 
   deploy:
-    name: Deploy to Kind
-    runs-on: self-hosted
+    name: Deploy to EKS
+    runs-on: ubuntu-latest
     needs: build-and-push
     
+    # 授予job获取OIDC token的权限
+    permissions:
+      id-token: write
+      contents: read
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -148,17 +153,29 @@ jobs:
       - name: Set lower case image name
         run: echo "IMAGE_NAME_LOWER=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
-      - name: Deploy Application
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Configure kubectl for EKS
+        run: |
+          aws eks update-kubeconfig --region ${{ secrets.AWS_REGION }} --name ml-infra-prod-cluster
+
+      - name: Deploy Application to EKS
         env:
           # The runner is installed in the user's home dir, ~
-          # So we point KUBECONFIG to the file we copied there.
-          KUBECONFIG: /home/a/ml-infrastructure-bootcamp/actions-runner/kubeconfig_for_runner.yaml
+          # Point KUBECONFIG to the file we copied there.
+          # KUBECONFIG: /home/a/ml-infrastructure-bootcamp/actions-runner/kubeconfig_for_runner.yaml
           # 从上一个任务获取镜像摘要
           IMAGE_DIGEST: ${{ needs.build-and-push.outputs.digest }}
         run: |
           echo "--- Verifying kubectl connection ---"
           kubectl cluster-info
           
+          kubectl apply -f kubernetes/
+
           echo "--- Starting deployment ---"
           IMAGE_TAG="${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME_LOWER }}@${{ env.IMAGE_DIGEST }}"
           
@@ -168,3 +185,5 @@ jobs:
           
           kubectl rollout status deployment/ml-api-deployment \
             -n ml-production
+            
+# Trivial change to force re-evaluation
