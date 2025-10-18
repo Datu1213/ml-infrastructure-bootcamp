@@ -28,6 +28,22 @@ provider "aws" {
   }
 }
 
+# For eks version < 20, uncomment below to enable kubernetes provider
+#
+# provider "kubernetes" {
+#   host                   = module.eks.cluster_endpoint
+#   cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
+#   token                  = data.aws_eks_cluster_auth.this.token
+# }
+
+# data "aws_eks_cluster" "this" {
+#   name = module.eks.cluster_name
+# }
+
+# data "aws_eks_cluster_auth" "this" {
+#   name = module.eks.cluster_name
+# }
+
 # 使用一个现成的模块来创建VPC网络
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
@@ -47,7 +63,7 @@ module "vpc" {
 # 使用VPC的输出，创建一个EKS K8s集群
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "~> 19.0"
+  version = "~> 20.0"
 
   cluster_name    = "${var.project_name}-cluster"
   cluster_version = "1.28"
@@ -70,11 +86,15 @@ module "eks" {
     }
   }
 
-  aws_auth_roles = [{
-    rolearn  = aws_iam_role.github_actions_deployer.arn
-    username = "github-actions-deployer"
-    groups   = ["system:masters"] # 授予完整的集群管理员权限
-  }]
+  # For eks version < 20, uncomment below to enable aws_auth configmap management
+  #
+  # manage_aws_auth_configmap = true   # 确保 Terraform 管理 aws-auth
+
+  # aws_auth_roles = [{
+  #   rolearn  = aws_iam_role.github_actions_deployer.arn
+  #   username = "github-actions-deployer"
+  #   groups   = ["system:masters"] # 授予完整的集群管理员权限
+  # }]
 }
 
 
@@ -117,4 +137,19 @@ resource "aws_iam_role_policy_attachment" "github_actions_deployer_eks_attach" {
 resource "aws_iam_role_policy_attachment" "github_actions_deployer_eks_worker_attach" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
   role       = aws_iam_role.github_actions_deployer.name
+}
+
+resource "aws_eks_access_entry" "github_actions" {
+  cluster_name  = module.eks.cluster_name
+  principal_arn = aws_iam_role.github_actions_deployer.arn
+  type          = "STANDARD"
+}
+
+resource "aws_eks_access_policy_association" "github_actions_admin" {
+  cluster_name  = module.eks.cluster_name
+  policy_arn    = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+  principal_arn = aws_iam_role.github_actions_deployer.arn
+  access_scope {
+    type = "cluster"
+  }
 }
